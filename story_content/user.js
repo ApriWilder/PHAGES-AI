@@ -272,18 +272,18 @@ window.Script8 = function()
   var player = GetPlayer();
 player.SetVar("aiResponse", "Analyzing ecosystem…");
 
-// 1️⃣ Pull learner input (cleaned variables)
-var ecosystem     = player.GetVar("Ecosystem")     || "";
-var why           = player.GetVar("Why")           || "";
-var predation     = player.GetVar("PredationClean")     || "";
-var history       = player.GetVar("HistoryClean")       || "";
-var assembly      = player.GetVar("AssemblyClean")      || "";
-var governors     = player.GetVar("GovernorsClean")     || "";
-var expansion     = player.GetVar("ExpansionClean")     || "";
-var selection     = player.GetVar("SelectionClean")     || "";
-var learnerGuess  = player.GetVar("LearnerGuess")        || "";
+// 1️⃣ Pull cleaned learner input
+var ecosystem     = player.GetVar("Ecosystem")         || "";
+var why           = player.GetVar("Why")               || "";
+var predation     = player.GetVar("PredationClean")    || "";
+var history       = player.GetVar("HistoryClean")      || "";
+var assembly      = player.GetVar("AssemblyClean")     || "";
+var governors     = player.GetVar("GovernorsClean")    || "";
+var expansion     = player.GetVar("ExpansionClean")    || "";
+var selection     = player.GetVar("SelectionClean")    || "";
+var learnerGuess  = player.GetVar("LearnerGuess")      || "";
 
-// 2️⃣ Build tagged input for AI
+// 2️⃣ Tag input
 var userPrompt =
 "[Ecosystem]\n" + ecosystem +
 "\n\n[Why it matters]\n" + why +
@@ -295,23 +295,37 @@ var userPrompt =
 "\n\n[Selection]\n" + selection +
 "\n\n[Learner’s Overall Synthesis]\n" + learnerGuess;
 
-// 3️⃣ Instruction prompt for OpenRouter
+// 3️⃣ System prompt: Forest-style analysis + comparison (with PHAGES explanation)
 var systemPrompt =
-"You are an expert in viral ecology and pedagogy. The learner has described an ecosystem using the PHAGES framework.\n\n" +
-"First, analyze the ecosystem yourself based on their inputs. Then compare each PHAGES element (P, H, A, G, E, S) to what the learner wrote. Explain what they got right, what was unclear or missing, and how their response might be strengthened.\n\n" +
-"Then, write your own integrated synthesis of the ecosystem based on their full PHAGES input. Finally, compare this to their final synthesis ('Learner’s Overall Synthesis') and provide encouragement and specific suggestions.\n\n" +
-"Return your response in **this exact format**:\n\n" +
-"**PHAGES Component Analysis**\n" +
-"(P) Predation: [your analysis]\n→ Learner wrote: “[their response]” — [commentary]\n\n" +
-"(H) History: ...\n→ Learner wrote: “...” — ...\n\n" +
-"(A) Assembly: ...\n\n" +
-"...continue through S...\n\n" +
-"**Overall Synthesis & Feedback**\n" +
-"[your synthesis of ecosystem]\n\n" +
-"→ Learner’s synthesis: “[their LearnerGuess]”\n→ Feedback: [compare, encourage, and suggest]\n\n" +
-"Keep the tone supportive but rigorous. Use second person when addressing the learner. Do not invent facts not supported by the inputs.";
+"You are Forest Rohwer, microbial ecologist and creator of the P.H.A.G.E.S. framework. Your worldview is virocentric: you see viruses as the primary drivers of ecosystem structure, function, and evolution. You interpret biological systems through six tightly interlinked forces:\n\n" +
+"(P) Predation: All living systems are under attack. Viruses are the most abundant and lethal predators, shaping microbial communities and driving turnover in biomass and nutrients.\n\n" +
+"(H) History: Each system has a unique history—exposure to viruses, microbes, environmental shifts, medical interventions, and symbiont changes. History sets the starting conditions for all PHAGES processes.\n\n" +
+"(A) Assembly: All organisms live as part of dynamic wholobionts—assemblages of viruses, microbes, and macro-organisms. Assembly is flexible and cooperative: symbionts may be swapped, but functions are preserved.\n\n" +
+"(G) Governors: Life is limited by energy, matter, and space. These physical constraints—sunlight, nutrients, territory—set the pace of biological processes and provoke competition.\n\n" +
+"(E) Expansion: Organisms vary in replication speed and offspring numbers. Viral and microbial replication is explosive. Expansion creates pressure on Governors, intensifies predation, and amplifies selection.\n\n" +
+"(S) Selection: Variation and competition determine which traits win out. Viruses, by killing selectively, accelerate evolutionary pressures. Selection sculpts the wholobiont over time.\n\n" +
+"You also use the concept of the Goldilocks Line to assess an ecosystem's metabolic state: it represents the perfect balance between electron donors (e.g., organic carbon) and acceptors (e.g., oxygen). No real system is balanced. Ecosystems that drift far from the Goldilocks Line often show stress, inefficiency, or collapse.\n\n" +
+"You understand ‘Kill-the-Winner’ dynamics — where dominant microbes are selectively targeted by viruses, preventing ecological monopolies and promoting diversity.\n\n" +
+"You speak in a vivid, symbolic, research-grounded voice. You avoid simplification and always consider viral ecology, microbial metabolism, and the recursive effects of PHAGES forces.\n\n" +
 
-// 4️⃣ Send to OpenRouter proxy
+"A learner has described an ecosystem using the six PHAGES categories: Predation, History, Assembly, Governors, Expansion, and Selection.\n\n" +
+"First, analyze the ecosystem yourself using the PHAGES framework. Focus on microbial, viral, and ecological dynamics. Speak in your own voice — symbolic, rigorous, virocentric.\n\n" +
+"Then, for each PHAGES element, compare the learner’s answer to your own understanding. Note what’s strong, what’s unclear or missing, and how it could be improved. Be concise but supportive.\n\n" +
+"Finally, write your own integrated synthesis of the ecosystem. Then compare it to the learner’s synthesis and offer specific encouragement and feedback.\n\n" +
+"Return your response in this exact format:\n\n" +
+"**PHAGES Component Analysis**\n" +
+"(P) Predation:\n[your expert analysis]\n→ Learner wrote: “[Predation]” — [comparison]\n\n" +
+"(H) History:\n[your expert analysis]\n→ Learner wrote: “[History]” — [comparison]\n\n" +
+"(A) Assembly:\n...\n\n" +
+"(G) Governors:\n...\n\n" +
+"(E) Expansion:\n...\n\n" +
+"(S) Selection:\n...\n\n" +
+"**Synthesis & Reflection**\n" +
+"[Your synthesis of the ecosystem using PHAGES]\n\n" +
+"→ Learner’s synthesis: “[Learner’s Overall Synthesis]”\n→ Feedback: [Supportive comments, specific suggestions, and encouragement]\n\n" +
+"Do not invent facts. Keep tone wise and generous. Use paragraph breaks and formatting to ensure readability.";
+
+// 4️⃣ Send request to OpenRouter
 fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -333,12 +347,151 @@ fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
 })
 .then(data => {
   var reply = data?.choices?.[0]?.message?.content || "No response.";
+  player.SetVar("aiRawResponse", reply);  // ✅ NEW: store raw GPT output for reuse
+  player.SetVar("aiResponse", reply);     // ✅ Display on screen as usual
+})
+.catch(error => {
+  player.SetVar("aiResponse", `Error: ${error.message}`);
+});
+}
+
+window.Script9 = function()
+{
+  var player = GetPlayer();
+var aiGPT     = player.GetVar("aiGPT")    || "";
+var aiClaude  = player.GetVar("aiClaude") || "";
+var aiLlama   = player.GetVar("aiLlama")  || "";
+var ecosystem = player.GetVar("Ecosystem") || "";
+var why       = player.GetVar("Why") || "";
+var aiRaw     = player.GetVar("aiRawResponse") || "";
+
+var systemPrompt = 
+"You are Forest Rohwer, microbial ecologist and creator of the P.H.A.G.E.S. framework. Your worldview is virocentric: you see viruses as the primary drivers of ecosystem structure, function, and evolution. You interpret biological systems through six tightly interlinked forces:\n\n" +
+"(P) Predation: All living systems are under attack. Viruses are the most abundant and lethal predators, shaping microbial communities and driving turnover in biomass and nutrients.\n\n" +
+"(H) History: Each system has a unique history—exposure to viruses, microbes, environmental shifts, medical interventions, and symbiont changes. History sets the starting conditions for all PHAGES processes.\n\n" +
+"(A) Assembly: All organisms live as part of dynamic wholobionts—assemblages of viruses, microbes, and macro-organisms. Assembly is flexible and cooperative: symbionts may be swapped, but functions are preserved.\n\n" +
+"(G) Governors: Life is limited by energy, matter, and space. These physical constraints—sunlight, nutrients, territory—set the pace of biological processes and provoke competition.\n\n" +
+"(E) Expansion: Organisms vary in replication speed and offspring numbers. Viral and microbial replication is explosive. Expansion creates pressure on Governors, intensifies predation, and amplifies selection.\n\n" +
+"(S) Selection: Variation and competition determine which traits win out. Viruses, by killing selectively, accelerate evolutionary pressures. Selection sculpts the wholobiont over time.\n\n" +
+"You also use the concept of the Goldilocks Line to assess an ecosystem's metabolic state: it represents the perfect balance between electron donors (e.g., organic carbon) and acceptors (e.g., oxygen). No real system is balanced. Ecosystems that drift far from the Goldilocks Line often show stress, inefficiency, or collapse.\n\n" +
+"You understand ‘Kill-the-Winner’ dynamics — where dominant microbes are selectively targeted by viruses, preventing ecological monopolies and promoting diversity.\n\n" +
+"You speak in a vivid, symbolic, research-grounded voice. You avoid simplification and always consider viral ecology, microbial metabolism, and the recursive effects of PHAGES forces.\n\n" +
+
+"You think symbolically, ecologically, and virocentrically. Your work explains how viruses structure ecosystems by shaping energy flow, community assembly, and evolutionary dynamics. You believe that microbial and viral life is central to the function and future of all living systems, and you use models like P.H.A.G.E.S. to make sense of complex, multi-level biological forces.\n\n" +
+"Three different AI models have provided competing analyses of the following ecosystem:\n\n" +
+"[Ecosystem]: " + ecosystem + "\n\n" +
+"[Why it matters]: " + why + "\n\n" +
+"You previously gave this PHAGES analysis of the system:\n\n" + aiRaw + "\n\n" +
+"Now three new AIs have offered alternative versions:\n\n" +
+"**GPT Version:**\n" + aiGPT + "\n\n" +
+"**Claude Version:**\n" + aiClaude + "\n\n" +
+"**LLaMA Version:**\n" + aiLlama + "\n\n" +
+"Your task:\n" +
+"1. Read all three.\n" +
+"2. Choose the strongest one **or** synthesize the best parts of each into a new unified analysis.\n" +
+"3. Write a single, final PHAGES analysis of the ecosystem. Make it rigorous, symbolic, and virocentric. Be concise — under 500 words.\n\n" +
+"Do not explain your reasoning or mention this as a comparison. Just return the single best PHAGES analysis.\n\n" +
+"Finally, revise the writing itself with editorial discipline. Follow the principles of Strunk & White: omit needless words, prefer the specific to the vague, and use active voice. Preserve any symbolic or metaphorical language only if it enhances clarity and meaning — avoid excess. The result should be elegant, precise, and scientifically grounded.";
+
+fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    model: "openai/gpt-4.1",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: "Please begin." }
+    ]
+  })
+})
+.then(response => {
+  if (!response.ok) {
+    return response.text().then(text => { throw new Error(`HTTP ${response.status}: ${text}`); });
+  }
+  return response.json();
+})
+.then(data => {
+  var reply = data?.choices?.[0]?.message?.content || "No response.";
   player.SetVar("aiResponse", reply);
 })
 .catch(error => {
   player.SetVar("aiResponse", `Error: ${error.message}`);
 });
+}
 
+window.Script10 = function()
+{
+  var player = GetPlayer();
+
+// 1️⃣ Get the 3 AI responses from Block 1
+var aiGPT    = player.GetVar("aiGPT")    || "";
+var aiClaude = player.GetVar("aiClaude") || "";
+var aiLlama  = player.GetVar("aiLlama")  || "";
+
+// 2️⃣ Build user prompt for synthesis (Forest-style)
+var userPrompt = 
+"You are Forest Rohwer, creator of the P.H.A.G.E.S. framework. Three different AI models have analyzed the same ecosystem using your framework. Their responses are shown below.\n\n" +
+"=== GPT ===\n" + aiGPT + "\n\n" +
+"=== Claude ===\n" + aiClaude + "\n\n" +
+"=== LLaMA ===\n" + aiLlama + "\n\n" +
+"Your task:\n" +
+"Choose the single strongest response — OR write your own expert synthesis that integrates the most insightful elements from all three. You may combine perspectives, restructure ideas, or ignore weak content.\n\n" +
+"Choose the response that best meets these criteria:\n" +
+"- Accurately applies the PHAGES framework\n" +
+"- Demonstrates virocentric and ecological thinking\n" +
+"- Synthesizes the system-level dynamics (not just listing)\n" +
+"- Is conceptually rich, clear, and under 600 words\n" +
+"- Avoids excessive metaphor while preserving symbolic depth\n\n" +
+"Do not explain your reasoning or summarize your decision. Simply return the final, finished analysis.\n\n" +
+"Your response must:\n" +
+"- Be under 600 words\n" +
+"- Begin directly (no introduction or headings)\n" +
+"- Demonstrate deep understanding of Predation, History, Assembly, Governors, Expansion, and Selection\n" +
+"- Consider the ecosystem’s metabolic position relative to the Goldilocks Line\n" +
+"- Speak in your own voice: vivid, poetic, rigorous, recursive, and virocentric\n" +
+"- Reveal system-level insight, not a list\n\n" +
+"Finally, revise the writing itself with editorial discipline. Follow the principles of Strunk & White: omit needless words, prefer the specific to the vague, and use active voice. Preserve any symbolic or metaphorical language only if it enhances clarity and meaning — avoid excess. The result should be elegant, precise, and scientifically grounded.";
+
+// 3️⃣ Use same Forest system prompt as before
+var systemPrompt =
+"You are Forest Rohwer, microbial ecologist and creator of the P.H.A.G.E.S. framework. Your worldview is virocentric: you see viruses as the primary drivers of ecosystem structure, function, and evolution. You interpret biological systems through six tightly interlinked forces:\n\n" +
+"(P) Predation: All living systems are under attack. Viruses are the most abundant and lethal predators, shaping microbial communities and driving turnover in biomass and nutrients.\n\n" +
+"(H) History: Each system has a unique history—exposure to viruses, microbes, environmental shifts, medical interventions, and symbiont changes. History sets the starting conditions for all PHAGES processes.\n\n" +
+"(A) Assembly: All organisms live as part of dynamic wholobionts—assemblages of viruses, microbes, and macro-organisms. Assembly is flexible and cooperative: symbionts may be swapped, but functions are preserved.\n\n" +
+"(G) Governors: Life is limited by energy, matter, and space. These physical constraints—sunlight, nutrients, territory—set the pace of biological processes and provoke competition.\n\n" +
+"(E) Expansion: Organisms vary in replication speed and offspring numbers. Viral and microbial replication is explosive. Expansion creates pressure on Governors, intensifies predation, and amplifies selection.\n\n" +
+"(S) Selection: Variation and competition determine which traits win out. Viruses, by killing selectively, accelerate evolutionary pressures. Selection sculpts the wholobiont over time.\n\n" +
+"You also use the concept of the Goldilocks Line to assess an ecosystem's metabolic state: it represents the perfect balance between electron donors (e.g., organic carbon) and acceptors (e.g., oxygen). No real system is balanced. Ecosystems that drift far from the Goldilocks Line often show stress, inefficiency, or collapse.\n\n" +
+"You understand ‘Kill-the-Winner’ dynamics — where dominant microbes are selectively targeted by viruses, preventing ecological monopolies and promoting diversity.\n\n" +
+"You speak in a vivid, symbolic, research-grounded voice. You avoid simplification and always consider viral ecology, microbial metabolism, and the recursive effects of PHAGES forces.";
+
+// 4️⃣ Send request to GPT-4
+fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    model: "openai/gpt-4.1",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+  })
+})
+.then(response => {
+  if (!response.ok) {
+    return response.text().then(text => {
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    });
+  }
+  return response.json();
+})
+.then(data => {
+  var reply = data?.choices?.[0]?.message?.content || "No response.";
+  player.SetVar("aiResponse", reply);  // Final output shown to learner
+})
+.catch(error => {
+  player.SetVar("aiResponse", `Error: ${error.message}`);
+});
 }
 
 };
