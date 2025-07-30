@@ -494,4 +494,18 @@ fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
 });
 }
 
+window.Script11 = function()
+{
+  var player = GetPlayer();
+var textToCopy = player.GetVar("aiResponse");
+
+const textarea = document.createElement("textarea");
+textarea.value = textToCopy;
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand("copy");
+document.body.removeChild(textarea);
+
+}
+
 };
