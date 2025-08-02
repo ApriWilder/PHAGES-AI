@@ -182,94 +182,6 @@ else player.SetVar("nextLayer", "");
 window.Script7 = function()
 {
   var player = GetPlayer();
-player.SetVar("aiResponse", "Cleaning your answers…");
-
-// 1️⃣ Pull raw learner input
-var predation  = player.GetVar("Predation")  || "";
-var history    = player.GetVar("History")    || "";
-var assembly   = player.GetVar("Assembly")   || "";
-var governors  = player.GetVar("Governors")  || "";
-var expansion  = player.GetVar("Expansion")  || "";
-var selection  = player.GetVar("Selection")  || "";
-
-// 2️⃣ Replace blank inputs with "No answer."
-if (!predation.trim())  predation  = "No answer.";
-if (!history.trim())    history    = "No answer.";
-if (!assembly.trim())   assembly   = "No answer.";
-if (!governors.trim())  governors  = "No answer.";
-if (!expansion.trim())  expansion  = "No answer.";
-if (!selection.trim())  selection  = "No answer.";
-
-// 3️⃣ Construct user prompt
-var userPrompt =
-"[Predation]\n" + predation +
-"\n\n[History]\n" + history +
-"\n\n[Assembly]\n" + assembly +
-"\n\n[Governors]\n" + governors +
-"\n\n[Expansion]\n" + expansion +
-"\n\n[Selection]\n" + selection;
-
-// 4️⃣ System prompt — clean without overwriting weird input
-var systemPrompt =
-"You are a science educator reviewing student responses to the P.H.A.G.E.S. framework.\n\n" +
-"Your job is to fix grammar, clarify slang or vague language, and translate informal responses into accurate biological terms — while **preserving the original idea**.\n\n" +
-"If a response is unclear but not empty, do not erase or rewrite it. Instead, wrap it in quotes and add a question mark. Example:\n" +
-"  \"they vibe with the coral\"?\n\n" +
-"If a response is blank or says 'No answer.', return exactly: No answer.\n\n" +
-"Use this format:\n" +
-"[Predation]\n<response>\n\n[History]\n<response>\n\n[Assembly]\n<response>\n\n[Governors]\n<response>\n\n[Expansion]\n<response>\n\n[Selection]\n<response>\n\n" +
-"No commentary. No skipped tags. No invented content.";
-
-// 5️⃣ Send to OpenRouter
-fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    model: "openai/gpt-4.1",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user",   content: userPrompt }
-    ]
-  })
-})
-.then(response => {
-  if (!response.ok) {
-    return response.text().then(text => {
-      throw new Error(`HTTP ${response.status}: ${text}`);
-    });
-  }
-  return response.json();
-})
-.then(data => {
-  var reply = data?.choices?.[0]?.message?.content || "No response.";
-
-  // 6️⃣ Extract cleaned responses
-  var cleanedPredation  = /\[Predation\]\s*([\s\S]*?)\n\s*\[/.exec(reply)?.[1]?.trim() || "No answer.";
-  var cleanedHistory    = /\[History\]\s*([\s\S]*?)\n\s*\[/.exec(reply)?.[1]?.trim() || "No answer.";
-  var cleanedAssembly   = /\[Assembly\]\s*([\s\S]*?)\n\s*\[/.exec(reply)?.[1]?.trim() || "No answer.";
-  var cleanedGovernors  = /\[Governors\]\s*([\s\S]*?)\n\s*\[/.exec(reply)?.[1]?.trim() || "No answer.";
-  var cleanedExpansion  = /\[Expansion\]\s*([\s\S]*?)\n\s*\[/.exec(reply)?.[1]?.trim() || "No answer.";
-  var cleanedSelection  = /\[Selection\]\s*([\s\S]*)/.exec(reply)?.[1]?.trim() || "No answer.";
-
-  // 7️⃣ Push cleaned results to Storyline
-  player.SetVar("PredationClean",  cleanedPredation);
-  player.SetVar("HistoryClean",    cleanedHistory);
-  player.SetVar("AssemblyClean",   cleanedAssembly);
-  player.SetVar("GovernorsClean",  cleanedGovernors);
-  player.SetVar("ExpansionClean",  cleanedExpansion);
-  player.SetVar("SelectionClean",  cleanedSelection);
-
-  // 8️⃣ Signal completion
-  player.SetVar("aiResponse", "Answers cleaned and updated.");
-})
-.catch(error => {
-  player.SetVar("aiResponse", `Error: ${error.message}`);
-});
-}
-
-window.Script8 = function()
-{
-  var player = GetPlayer();
 player.SetVar("aiResponse", "Analyzing ecosystem…");
 
 // 1️⃣ Pull cleaned learner input
@@ -355,80 +267,55 @@ fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
 });
 }
 
-window.Script9 = function()
+window.Script8 = function()
 {
   var player = GetPlayer();
-var aiGPT     = player.GetVar("aiGPT")    || "";
-var aiClaude  = player.GetVar("aiClaude") || "";
-var aiLlama   = player.GetVar("aiLlama")  || "";
 var ecosystem = player.GetVar("Ecosystem") || "";
-var why       = player.GetVar("Why") || "";
-var aiRaw     = player.GetVar("aiRawResponse") || "";
+var why = player.GetVar("Why") || "";
 
-var systemPrompt = 
-"You are Forest Rohwer, microbial ecologist and creator of the P.H.A.G.E.S. framework. Your worldview is virocentric: you see viruses as the primary drivers of ecosystem structure, function, and evolution. You interpret biological systems through six tightly interlinked forces:\n\n" +
-"(P) Predation: All living systems are under attack. Viruses are the most abundant and lethal predators, shaping microbial communities and driving turnover in biomass and nutrients.\n\n" +
-"(H) History: Each system has a unique history—exposure to viruses, microbes, environmental shifts, medical interventions, and symbiont changes. History sets the starting conditions for all PHAGES processes.\n\n" +
-"(A) Assembly: All organisms live as part of dynamic wholobionts—assemblages of viruses, microbes, and macro-organisms. Assembly is flexible and cooperative: symbionts may be swapped, but functions are preserved.\n\n" +
-"(G) Governors: Life is limited by energy, matter, and space. These physical constraints—sunlight, nutrients, territory—set the pace of biological processes and provoke competition.\n\n" +
-"(E) Expansion: Organisms vary in replication speed and offspring numbers. Viral and microbial replication is explosive. Expansion creates pressure on Governors, intensifies predation, and amplifies selection.\n\n" +
-"(S) Selection: Variation and competition determine which traits win out. Viruses, by killing selectively, accelerate evolutionary pressures. Selection sculpts the wholobiont over time.\n\n" +
-"You also use the concept of the Goldilocks Line to assess an ecosystem's metabolic state: it represents the perfect balance between electron donors (e.g., organic carbon) and acceptors (e.g., oxygen). No real system is balanced. Ecosystems that drift far from the Goldilocks Line often show stress, inefficiency, or collapse.\n\n" +
-"You understand ‘Kill-the-Winner’ dynamics — where dominant microbes are selectively targeted by viruses, preventing ecological monopolies and promoting diversity.\n\n" +
-"You speak in a vivid, symbolic, research-grounded voice. You avoid simplification and always consider viral ecology, microbial metabolism, and the recursive effects of PHAGES forces.\n\n" +
+var userPrompt =
+  "Analyze the following ecosystem using the PHAGES framework.\n\n" +
+  "[Ecosystem]: " + ecosystem + "\n\n" +
+  "[Why it matters]: " + why + "\n\n" +
+  "Return a detailed PHAGES analysis.";
 
-"You think symbolically, ecologically, and virocentrically. Your work explains how viruses structure ecosystems by shaping energy flow, community assembly, and evolutionary dynamics. You believe that microbial and viral life is central to the function and future of all living systems, and you use models like P.H.A.G.E.S. to make sense of complex, multi-level biological forces.\n\n" +
-"Three different AI models have provided competing analyses of the following ecosystem:\n\n" +
-"[Ecosystem]: " + ecosystem + "\n\n" +
-"[Why it matters]: " + why + "\n\n" +
-"You previously gave this PHAGES analysis of the system:\n\n" + aiRaw + "\n\n" +
-"Now three new AIs have offered alternative versions:\n\n" +
-"**GPT Version:**\n" + aiGPT + "\n\n" +
-"**Claude Version:**\n" + aiClaude + "\n\n" +
-"**LLaMA Version:**\n" + aiLlama + "\n\n" +
-"Your task:\n" +
-"1. Read all three.\n" +
-"2. Choose the strongest one **or** synthesize the best parts of each into a new unified analysis.\n" +
-"3. Write a single, final PHAGES analysis of the ecosystem. Make it rigorous, symbolic, and virocentric. Be concise — under 500 words.\n\n" +
-"Do not explain your reasoning or mention this as a comparison. Just return the single best PHAGES analysis.\n\n" +
-"Finally, revise the writing itself with editorial discipline. Follow the principles of Strunk & White: omit needless words, prefer the specific to the vague, and use active voice. Preserve any symbolic or metaphorical language only if it enhances clarity and meaning — avoid excess. The result should be elegant, precise, and scientifically grounded.";
-
-fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
+// Send prompt to competition endpoint
+fetch("https://openai-proxy-for-storyline.onrender.com/phages_competition", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    model: "openai/gpt-4.1",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: "Please begin." }
-    ]
-  })
+  body: JSON.stringify({ prompt: userPrompt })
 })
 .then(response => {
   if (!response.ok) {
-    return response.text().then(text => { throw new Error(`HTTP ${response.status}: ${text}`); });
+    return response.text().then(text => {
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    });
   }
   return response.json();
 })
 .then(data => {
-  var reply = data?.choices?.[0]?.message?.content || "No response.";
-  player.SetVar("aiResponse", reply);
+  // Save each model's response to Storyline variables
+  player.SetVar("aiGPT", data["openai/gpt-4o"] || "No response");
+  player.SetVar("aiClaude", data["anthropic/claude-3-haiku"] || "No response");
+  player.SetVar("aiLlama", data["meta-llama/llama-3-70b-instruct"] || "No response");
+
+  // You can now trigger the next step in Storyline (e.g., display responses or synthesize them)
 })
 .catch(error => {
-  player.SetVar("aiResponse", `Error: ${error.message}`);
+  player.SetVar("aiRawResponse", `Error: ${error.message}`);
 });
 }
 
-window.Script10 = function()
+window.Script9 = function()
 {
   var player = GetPlayer();
 
-// 1️⃣ Get the 3 AI responses from Block 1
+// 1️⃣ Get the 3 AI responses from the competition
 var aiGPT    = player.GetVar("aiGPT")    || "";
 var aiClaude = player.GetVar("aiClaude") || "";
 var aiLlama  = player.GetVar("aiLlama")  || "";
 
-// 2️⃣ Build user prompt for synthesis (Forest-style)
+// 2️⃣ Build the user prompt for synthesis (Forest chooses the winner or synthesizes)
 var userPrompt = 
 "You are Forest Rohwer, creator of the P.H.A.G.E.S. framework. Three different AI models have analyzed the same ecosystem using your framework. Their responses are shown below.\n\n" +
 "=== GPT ===\n" + aiGPT + "\n\n" +
@@ -452,7 +339,7 @@ var userPrompt =
 "- Reveal system-level insight, not a list\n\n" +
 "Finally, revise the writing itself with editorial discipline. Follow the principles of Strunk & White: omit needless words, prefer the specific to the vague, and use active voice. Preserve any symbolic or metaphorical language only if it enhances clarity and meaning — avoid excess. The result should be elegant, precise, and scientifically grounded.";
 
-// 3️⃣ Use same Forest system prompt as before
+// 3️⃣ Build Forest's system prompt
 var systemPrompt =
 "You are Forest Rohwer, microbial ecologist and creator of the P.H.A.G.E.S. framework. Your worldview is virocentric: you see viruses as the primary drivers of ecosystem structure, function, and evolution. You interpret biological systems through six tightly interlinked forces:\n\n" +
 "(P) Predation: All living systems are under attack. Viruses are the most abundant and lethal predators, shaping microbial communities and driving turnover in biomass and nutrients.\n\n" +
@@ -465,12 +352,12 @@ var systemPrompt =
 "You understand ‘Kill-the-Winner’ dynamics — where dominant microbes are selectively targeted by viruses, preventing ecological monopolies and promoting diversity.\n\n" +
 "You speak in a vivid, symbolic, research-grounded voice. You avoid simplification and always consider viral ecology, microbial metabolism, and the recursive effects of PHAGES forces.";
 
-// 4️⃣ Send request to GPT-4
+// 4️⃣ Send request to /chat to synthesize or select the winning response
 fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    model: "openai/gpt-4.1",
+    model: "openai/gpt-4o",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
@@ -487,11 +374,26 @@ fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
 })
 .then(data => {
   var reply = data?.choices?.[0]?.message?.content || "No response.";
-  player.SetVar("aiResponse", reply);  // Final output shown to learner
+  player.SetVar("aiResponse", reply);
 })
 .catch(error => {
   player.SetVar("aiResponse", `Error: ${error.message}`);
 });
+
+}
+
+window.Script10 = function()
+{
+  var player = GetPlayer();
+var textToCopy = player.GetVar("aiResponse");
+
+const textarea = document.createElement("textarea");
+textarea.value = textToCopy;
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand("copy");
+document.body.removeChild(textarea);
+
 }
 
 window.Script11 = function()
