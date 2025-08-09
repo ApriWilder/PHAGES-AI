@@ -611,6 +611,27 @@ window.Script13 = function()
 {
   var player = GetPlayer();
 
+// Get the three ideas from Storyline
+var idea1 = player.GetVar("Idea1") || "";
+var idea2 = player.GetVar("Idea2") || "";
+var idea3 = player.GetVar("Idea3") || "";
+
+// Build the text with line breaks between each
+var textToCopy = idea1 + "\n" + idea2 + "\n" + idea3;
+
+// Create a temporary textarea to hold the text for copying
+const textarea = document.createElement("textarea");
+textarea.value = textToCopy;
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand("copy");
+document.body.removeChild(textarea);
+}
+
+window.Script14 = function()
+{
+  var player = GetPlayer();
+
 // Gather learner inputs (avoid pulling current displayed ideas so "Thinking..." is ignored)
 var ecosystem  = player.GetVar("Ecosystem")  || "";
 var why        = player.GetVar("Why")        || "";
@@ -700,7 +721,7 @@ fetch("https://openai-proxy-for-storyline.onrender.com/chat", {
 });
 }
 
-window.Script14 = function()
+window.Script15 = function()
 {
   var player = GetPlayer();
 
